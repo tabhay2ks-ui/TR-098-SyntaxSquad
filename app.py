@@ -4,7 +4,7 @@ import streamlit as st
 import plotly.graph_objects as go
 import plotly.express as px
 
-API_URL = "http://127.0.0.1:8000/predict"
+API_URL = "https://ai-fake-review-detection-and-seller.onrender.com/predict"
 
 st.set_page_config(
     page_title="AI Fake Review Detection",
