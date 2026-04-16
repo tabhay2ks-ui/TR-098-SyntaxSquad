@@ -1,190 +1,296 @@
-🛡️ AI-Powered Fake Review Detection & Seller Trust Scoring (Phase 2)
-📌 Overview
+# 🛡️ AI-Powered Fake Review Detection & Seller Trust Scoring
 
-Fake reviews distort customer trust and influence purchasing decisions across e-commerce platforms. This project builds an end-to-end AI pipeline to detect fake reviews, identify coordinated review campaigns, and compute a trust score for sellers.
+## 📌 Overview
 
-In Phase 2, the system has been significantly enhanced to incorporate behavioral intelligence, clustering-based fraud detection, and explainability, making it closer to a real-world fraud detection system.
+Fake reviews distort customer trust, influence purchasing decisions, and reduce the credibility of online marketplaces. This project builds an end-to-end AI system that detects suspicious reviews, identifies coordinated review campaigns, and computes trust scores for sellers.
 
-🚀 Key Features
-🔍 Fake Review Detection
-Uses TF-IDF + Logistic Regression
-Combines text + behavioral features
-Outputs:
-Fake probability
-Authenticity score (0–100)
-Predicted label (Real/Fake)
-🧠 Behavioral Analysis (NEW in Phase 2)
+The system evolves from a basic classifier into a **real-time fraud detection platform** with:
 
-Enhanced feature engineering to capture real-world fraud patterns:
+- Machine Learning-based review classification  
+- Behavioral feature engineering  
+- Suspicious reviewer clustering  
+- Seller trust scoring  
+- Explainable AI outputs  
+- FastAPI real-time inference  
+- Streamlit interactive dashboard  
 
-Review length & word count
-Rating deviation from product average
-Reviewer activity patterns
-Daily review frequency (review bursts)
-Extreme rating detection (1★ or 5★)
-Verified purchase behavior
-🕸️ Coordinated Campaign Detection (Enhanced)
-Uses DBSCAN clustering
-Groups reviewers based on behavior patterns
-Detects potential review spam campaigns
-Outputs:
-cluster_id
-suspicious_cluster_flag
-⭐ Seller Trust Scoring (Improved)
+---
 
-Aggregates review-level signals into seller-level insights:
+## 🚀 Key Features
 
-Incorporates:
-Authenticity scores
-Verified purchase ratio
-Fake probability trends
-Suspicious cluster participation
-Outputs:
-Trust score (0–100)
-Seller grade (A–F)
-Human-readable explanation
-💬 Explainable AI (NEW)
+### 🔍 Fake Review Detection
+- TF-IDF + Logistic Regression
+- Combines text + behavioral features
 
-Every review now includes a human-readable explanation:
+**Outputs:**
+- Fake probability  
+- Predicted label (Real / Fake)  
+- Authenticity score (0–100)
 
-Explains why a review is suspicious or authentic
-Uses feature-based reasoning such as:
-Short review length
-High reviewer activity
-Rating anomalies
-Cluster membership
-🏗️ Project Structure
+---
+
+### 🧠 Behavioral Analysis
+Captures real-world fraud patterns using:
+
+- Review length & word count  
+- Exclamation count & uppercase ratio  
+- Sentiment polarity  
+- Verified purchase behavior  
+- Reviewer activity patterns  
+- Daily review frequency (bursts)  
+- Rating deviation from product average  
+- Extreme rating detection  
+- Spam phrase detection  
+- Repeated word ratio  
+
+---
+
+### 🕸️ Coordinated Campaign Detection
+- Uses **DBSCAN clustering**
+- Groups reviewers based on behavior
+- Detects potential spam campaigns
+
+**Outputs:**
+- `cluster_id`  
+- `suspicious_cluster_flag`
+
+---
+
+### ⭐ Seller Trust Scoring
+Aggregates review-level signals into seller-level insights.
+
+**Factors:**
+- Authenticity score  
+- Verified purchase ratio  
+- Fake probability trends  
+- Suspicious cluster activity  
+
+**Outputs:**
+- Trust score (0–100)  
+- Seller grade (A–F)  
+- Trust explanation  
+
+---
+
+### 💬 Explainable AI
+Each prediction includes a human-readable explanation.
+
+**Explains:**
+- Why a review is suspicious or authentic  
+- Behavioral and linguistic signals  
+- Model confidence patterns  
+
+---
+
+### 🚨 Input Validation
+- Detects gibberish or invalid review text  
+- Prevents unrealistic predictions  
+- Improves system robustness  
+
+---
+
+### 🔌 Real-Time API (FastAPI)
+
+
+**Returns:**
+- Fake probability  
+- Predicted label  
+- Authenticity score  
+- Seller trust score  
+- Seller grade  
+- Review explanation  
+- Seller explanation  
+
+---
+
+### 🖥️ Interactive Dashboard (Streamlit)
+
+- Real-time review analysis  
+- Clean UI with metrics  
+- Interactive visualizations  
+
+**Includes:**
+- Fake probability gauge  
+- Authenticity score gauge  
+- Seller trust score chart  
+- Risk profile visualization  
+
+---
+
+## 🏗️ Project Structure
+
 fake-review-detector/
 │
 ├── data/
-│   ├── raw/
-│   └── processed/
+│ ├── raw/
+│ └── processed/
 │
 ├── src/
-│   ├── data_preprocessing.py
-│   ├── features.py           # Enhanced behavioral features
-│   ├── model.py              # Improved ML pipeline (scaled + balanced)
-│   ├── clustering.py         # DBSCAN-based campaign detection
-│   ├── scoring.py            # Seller trust scoring
-│   ├── explanation.py        # Explainable AI (NEW)
-│   └── utils.py
+│ ├── data_preprocessing.py
+│ ├── features.py
+│ ├── model.py
+│ ├── clustering.py
+│ ├── scoring.py
+│ ├── explanation.py
+│ ├── utils.py
+│ ├── api.py
+│ └── app.py
 │
 ├── outputs/
-│   ├── predictions.csv
-│   └── seller_scores.csv
+│ ├── predictions.csv
+│ └── seller_scores.csv
 │
-├── main.py                   # Full pipeline execution
-├── predict_one.py            # Single review prediction (NEW)
+├── main.py
+├── predict_one.py
 ├── requirements.txt
 └── README.md
-⚙️ How It Works
+
+
+---
+
+## ⚙️ How It Works
+
+
 Raw Data
-   ↓
+↓
 Data Preprocessing
-   ↓
-Feature Engineering (Text + Behavioral)
-   ↓
-Fake Review Model (ML)
-   ↓
+↓
+Feature Engineering
+↓
+Fake Review Model
+↓
 Clustering (Campaign Detection)
-   ↓
+↓
 Seller Trust Scoring
-   ↓
+↓
 Explainability Layer
-   ↓
-Outputs
-📊 Input Data
+↓
+API / Dashboard Output
+
+
+---
+
+## 📊 Input Data
 
 The dataset includes:
 
-review_text
-rating
-label (fake or real)
-product_id
-reviewer_id
-seller_id
-timestamp
-verified_purchase
+- `review_text`  
+- `rating`  
+- `label`  
+- `product_id`  
+- `reviewer_id`  
+- `seller_id`  
+- `timestamp`  
+- `verified_purchase`  
 
 Additional features are engineered during processing.
 
-📈 Outputs
-📄 predictions.csv
+---
 
-Review-level insights:
+## 📈 Outputs
 
-Fake probability
-Authenticity score
-Predicted label
-Cluster detection
-Behavioral features
-Explanation (NEW)
-📄 seller_scores.csv
+### 📄 predictions.csv
+- Fake probability  
+- Authenticity score  
+- Predicted label  
+- Cluster detection  
+- Behavioral features  
+- Explanation  
 
-Seller-level insights:
+### 📄 seller_scores.csv
+- Seller trust score (0–100)  
+- Seller grade (A–F)  
+- Aggregated metrics  
+- Trust explanation  
 
-Seller trust score (0–100)
-Seller grade (A–F)
-Aggregated behavior metrics
-Trust explanation (NEW)
-🧮 Trust Score Formula
+---
 
-The seller trust score is computed using:
+## 🧮 Trust Score Formula
+
 
 40% → Review authenticity
 25% → Verified purchase ratio
-20% → Cluster trust (penalty for suspicious groups)
+20% → Cluster trust
 15% → Fake probability adjustment
-🛠️ Technologies Used
-Python
-Pandas & NumPy
-Scikit-learn
-DBSCAN (Clustering)
-TF-IDF (Text Vectorization)
-TextBlob (Sentiment Analysis)
-▶️ How to Run
-Install dependencies:
+
+
+---
+
+## 🛠️ Technologies Used
+
+- Python  
+- Pandas & NumPy  
+- Scikit-learn  
+- TF-IDF  
+- Logistic Regression  
+- DBSCAN  
+- TextBlob  
+- FastAPI  
+- Streamlit  
+- Plotly  
+
+---
+
+## ▶️ How to Run
+
+### 1. Install dependencies
+```bash
 pip install -r requirements.txt
-Run full pipeline:
+2. Run batch pipeline
 python main.py
-Run single review prediction:
+3. Run single prediction
 python predict_one.py
-Outputs will be saved in:
-outputs/
-🎯 Phase 2 Improvements Summary
+4. Start API
+python -m uvicorn api:app --reload
 
-Compared to Phase 1, this version introduces:
+Open:
 
+http://127.0.0.1:8000/docs
+5. Launch dashboard
+python -m streamlit run app.py
+🎯 Progress by Phase
+Phase 1
+Basic ML fake review classifier
+TF-IDF + Logistic Regression
+Phase 2
 Behavioral feature engineering
-Scaled and balanced ML model
-Coordinated campaign detection via clustering
-Seller trust scoring improvements
-Explainable AI for both reviews and sellers
-Interactive single-review prediction
-🔮 Future Improvements
-Deep learning models (BERT / Transformers)
-Graph-based fraud detection
-Real-time API (FastAPI)
-Dashboard (Streamlit / Tableau)
-Advanced explainability (SHAP / LIME)
+Clustering (DBSCAN)
+Seller trust scoring
+Explainable AI
+Single review prediction
+Phase 3
+FastAPI real-time API
+Streamlit dashboard
+Input validation
+Interactive charts
+Full system integration
 💡 Key Insight
 
-This project moves beyond simple classification by integrating:
+This project goes beyond classification by combining:
 
 Text analysis
 Behavioral intelligence
 Network-based clustering
 Explainability
+Real-time deployment
 
-to deliver a comprehensive trust evaluation system.
+to create a complete trust evaluation system.
 
+🔮 Future Improvements
+Transformer models (BERT)
+Graph-based fraud detection
+Batch upload analysis
+SHAP / LIME explainability
+Cloud deployment
+Admin analytics dashboard
 🏁 Conclusion
 
-In Phase 2, we transformed a basic fake review classifier into a multi-layer fraud detection system that:
+This project evolved into a full AI-powered fraud detection platform that:
 
-Detects fake reviews more reliably
-Identifies coordinated fraudulent behavior
-Provides transparent explanations
-Quantifies seller credibility
+Detects fake reviews
+Identifies coordinated fraud
+Explains decisions
+Scores seller credibility
+Provides real-time insights
 
-This system is scalable and can be adapted for real-world platforms like Amazon, Yelp, and Flipkart.
+It can be adapted for real-world platforms like Amazon, Yelp, and Flipkart.
