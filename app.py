@@ -1,11 +1,13 @@
 import requests
+import pandas as pd
 import streamlit as st
 import plotly.graph_objects as go
+import plotly.express as px
 
 API_URL = "http://127.0.0.1:8000/predict"
 
 st.set_page_config(
-    page_title="AI Fake Review Detection",
+    page_title="Trust Intelligence",
     page_icon="🛡️",
     layout="wide"
 )
@@ -14,36 +16,60 @@ st.markdown(
     """
     <style>
     .main {
-        padding-top: 1.2rem;
+        padding-top: 1.0rem;
     }
 
     .hero-card {
         background: linear-gradient(135deg, #0f172a, #1e293b);
         padding: 28px;
-        border-radius: 18px;
+        border-radius: 20px;
         color: white;
         margin-bottom: 20px;
-        box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+        box-shadow: 0 10px 28px rgba(0,0,0,0.22);
+    }
+
+    .hero-row {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .hero-logo {
+        font-size: 2.2rem;
+        background: rgba(255,255,255,0.08);
+        border: 1px solid rgba(255,255,255,0.12);
+        width: 64px;
+        height: 64px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 16px;
     }
 
     .hero-title {
         font-size: 2rem;
-        font-weight: 700;
-        margin-bottom: 0.4rem;
+        font-weight: 800;
+        margin-bottom: 0.1rem;
+    }
+
+    .hero-tagline {
+        font-size: 1.02rem;
+        color: #cbd5e1;
+        margin-bottom: 0.35rem;
     }
 
     .hero-subtitle {
-        font-size: 1rem;
-        opacity: 0.9;
+        font-size: 0.95rem;
+        color: #94a3b8;
         line-height: 1.5;
     }
 
     .section-card {
-        background: rgba(17, 24, 39, 0.70);
+        background: rgba(17, 24, 39, 0.72);
         padding: 20px;
         border-radius: 18px;
         border: 1px solid rgba(255,255,255,0.08);
-        box-shadow: 0 4px 18px rgba(0,0,0,0.20);
+        box-shadow: 0 4px 18px rgba(0,0,0,0.18);
         margin-bottom: 18px;
     }
 
@@ -51,7 +77,7 @@ st.markdown(
         padding: 18px;
         border-radius: 16px;
         border: 1px solid rgba(255,255,255,0.08);
-        background: rgba(31, 41, 55, 0.75);
+        background: rgba(31, 41, 55, 0.78);
         box-shadow: 0 4px 16px rgba(0,0,0,0.16);
         text-align: center;
         min-height: 110px;
@@ -104,7 +130,7 @@ st.markdown(
     }
 
     .explanation-card {
-        background: rgba(30, 41, 59, 0.80);
+        background: rgba(30, 41, 59, 0.82);
         padding: 18px;
         border-radius: 14px;
         border-left: 5px solid #3b82f6;
@@ -147,13 +173,10 @@ st.markdown(
 
 def get_status_block(label: str, invalid_input: bool = False) -> str:
     label_lower = str(label).strip().lower()
-
     if invalid_input:
         return '<div class="status-invalid">⚠️ Invalid / Suspicious Input</div>'
-
     if label_lower == "fake":
         return '<div class="status-fake">🚨 Predicted as Fake Review</div>'
-
     return '<div class="status-real">✅ Predicted as Real Review</div>'
 
 
@@ -270,251 +293,376 @@ def make_radar(fake_probability, authenticity_score, seller_trust_score):
     return fig
 
 
+def process_batch_file(df: pd.DataFrame) -> pd.DataFrame:
+    results = []
+
+    for _, row in df.iterrows():
+        payload = {
+            "review_text": row.get("review_text", ""),
+            "rating": float(row.get("rating", 5)),
+            "verified_purchase": int(row.get("verified_purchase", 1)),
+            "product_id": row.get("product_id", "batch_product"),
+            "reviewer_id": int(row.get("reviewer_id", 0)),
+            "seller_id": row.get("seller_id", "batch_seller")
+        }
+
+        try:
+            response = requests.post(API_URL, json=payload, timeout=30)
+            if response.status_code == 200:
+                results.append(response.json())
+        except Exception:
+            continue
+
+    return pd.DataFrame(results)
+
+
 st.markdown(
     """
     <div class="hero-card">
-        <div class="hero-title">🛡️ AI Fake Review Detection & Seller Trust Scoring</div>
-        <div class="hero-subtitle">
-            Analyze review authenticity in real time using machine learning, behavioral signals,
-            suspicious cluster detection, and seller trust scoring.
+        <div class="hero-row">
+            <div class="hero-logo">🛡️</div>
+            <div>
+                <div class="hero-title">Trust Intelligence</div>
+                <div class="hero-tagline">Trust Intelligence for E-Commerce</div>
+                <div class="hero-subtitle">
+                    Detect fake reviews, identify suspicious activity, and evaluate seller credibility in real time.
+                </div>
+            </div>
         </div>
     </div>
     """,
     unsafe_allow_html=True
 )
 
-top_left, top_right = st.columns([1.15, 1], gap="large")
+tab1, tab2 = st.tabs(["🔍 Single Review", "📂 Batch Analysis"])
 
-with top_left:
-    st.markdown('<div class="section-card">', unsafe_allow_html=True)
-    st.subheader("Review Input")
+with tab1:
+    left, right = st.columns([1.1, 1], gap="large")
 
-    with st.form("review_form"):
-        review_text = st.text_area(
-            "Review Text",
-            placeholder="Enter a product review here...",
-            height=160
-        )
+    with left:
+        st.markdown('<div class="section-card">', unsafe_allow_html=True)
+        st.subheader("Review Input")
 
-        c1, c2 = st.columns(2)
-        with c1:
-            rating = st.slider("Rating", min_value=1.0, max_value=5.0, value=5.0, step=1.0)
-        with c2:
-            verified_purchase = st.selectbox(
-                "Verified Purchase",
-                options=[1, 0],
-                format_func=lambda x: "Yes" if x == 1 else "No"
+        with st.form("review_form"):
+            review_text = st.text_area(
+                "Review Text",
+                placeholder="Enter a product review here...",
+                height=160
             )
 
-        c3, c4, c5 = st.columns(3)
-        with c3:
-            product_id = st.text_input("Product ID", value="demo_product_1")
-        with c4:
-            reviewer_id = st.number_input("Reviewer ID", min_value=1, value=12345, step=1)
-        with c5:
-            seller_id = st.text_input("Seller ID", value="demo_seller_1")
+            c1, c2 = st.columns(2)
+            with c1:
+                rating = st.slider("Rating", min_value=1.0, max_value=5.0, value=5.0, step=1.0)
+            with c2:
+                verified_purchase = st.selectbox(
+                    "Verified Purchase",
+                    options=[1, 0],
+                    format_func=lambda x: "Yes" if x == 1 else "No"
+                )
 
-        submitted = st.form_submit_button("Analyze Review", use_container_width=True)
+            c3, c4, c5 = st.columns(3)
+            with c3:
+                product_id = st.text_input("Product ID", value="demo_product_1")
+            with c4:
+                reviewer_id = st.number_input("Reviewer ID", min_value=1, value=12345, step=1)
+            with c5:
+                seller_id = st.text_input("Seller ID", value="demo_seller_1")
 
-    st.markdown('</div>', unsafe_allow_html=True)
+            submitted = st.form_submit_button("Analyze Review", use_container_width=True)
 
-    st.markdown('<div class="section-card">', unsafe_allow_html=True)
-    st.subheader("Quick Test Examples")
+        st.markdown('</div>', unsafe_allow_html=True)
 
-    example_choice = st.selectbox(
-        "Choose a sample review",
-        [
-            "Select an example",
-            "Real review example",
-            "Fake / spam review example",
-            "Invalid input example"
-        ]
-    )
+        st.markdown('<div class="section-card">', unsafe_allow_html=True)
+        st.subheader("Quick Test Examples")
 
-    if example_choice == "Real review example":
-        st.code(
-            "The quality of this product is really good. It works as expected and feels durable.",
-            language=None
-        )
-    elif example_choice == "Fake / spam review example":
-        st.code(
-            "BEST PRODUCT EVER!!! BUY NOW!!! AMAZING!!!",
-            language=None
-        )
-    elif example_choice == "Invalid input example":
-        st.code(
-            "ahsbhibsvhibavb",
-            language=None
+        example_choice = st.selectbox(
+            "Choose a sample review",
+            [
+                "Select an example",
+                "Real review example",
+                "Fake / spam review example",
+                "Invalid input example"
+            ]
         )
 
-    st.markdown('</div>', unsafe_allow_html=True)
-
-if submitted:
-    if not review_text.strip():
-        st.error("Please enter review text before analyzing.")
-    else:
-        payload = {
-            "review_text": review_text,
-            "rating": rating,
-            "verified_purchase": verified_purchase,
-            "product_id": product_id,
-            "reviewer_id": int(reviewer_id),
-            "seller_id": seller_id
-        }
-
-        try:
-            with st.spinner("Analyzing review..."):
-                response = requests.post(API_URL, json=payload, timeout=30)
-
-            if response.status_code != 200:
-                st.error(f"API error: {response.status_code}")
-                try:
-                    st.json(response.json())
-                except Exception:
-                    st.text(response.text)
-            else:
-                st.session_state.result = response.json()
-
-        except requests.exceptions.ConnectionError:
-            st.error(
-                "Could not connect to the API. Make sure FastAPI is running at http://127.0.0.1:8000"
+        if example_choice == "Real review example":
+            st.code(
+                "The quality of this product is really good. It works as expected and feels durable.",
+                language=None
             )
-        except requests.exceptions.Timeout:
-            st.error("The request timed out. Please try again.")
-        except Exception as e:
-            st.error(f"Unexpected error: {e}")
+        elif example_choice == "Fake / spam review example":
+            st.code(
+                "BEST PRODUCT EVER!!! BUY NOW!!! AMAZING!!!",
+                language=None
+            )
+        elif example_choice == "Invalid input example":
+            st.code(
+                "ahsbhibsvhibavb",
+                language=None
+            )
 
-with top_right:
-    st.markdown('<div class="section-card">', unsafe_allow_html=True)
-    st.subheader("Analysis Results")
+        st.markdown('</div>', unsafe_allow_html=True)
 
-    if "result" not in st.session_state:
-        st.info("Submit a review to view prediction results.")
-    else:
+    if submitted:
+        if not review_text.strip():
+            st.error("Please enter review text before analyzing.")
+        else:
+            payload = {
+                "review_text": review_text,
+                "rating": rating,
+                "verified_purchase": verified_purchase,
+                "product_id": product_id,
+                "reviewer_id": int(reviewer_id),
+                "seller_id": seller_id
+            }
+
+            try:
+                with st.spinner("Analyzing review..."):
+                    response = requests.post(API_URL, json=payload, timeout=30)
+
+                if response.status_code != 200:
+                    st.error(f"API error: {response.status_code}")
+                    try:
+                        st.json(response.json())
+                    except Exception:
+                        st.text(response.text)
+                else:
+                    st.session_state.result = response.json()
+
+            except requests.exceptions.ConnectionError:
+                st.error("Could not connect to the API. Make sure FastAPI is running at http://127.0.0.1:8000")
+            except requests.exceptions.Timeout:
+                st.error("The request timed out. Please try again.")
+            except Exception as e:
+                st.error(f"Unexpected error: {e}")
+
+    with right:
+        st.markdown('<div class="section-card">', unsafe_allow_html=True)
+        st.subheader("Analysis Results")
+
+        if "result" not in st.session_state:
+            st.info("Submit a review to view prediction results.")
+        else:
+            result = st.session_state.result
+            invalid_input = bool(result.get("invalid_input", False))
+            fake_probability = float(result.get("fake_probability", 0))
+            authenticity_score = float(result.get("authenticity_score", 0))
+            seller_trust_score = float(result.get("seller_trust_score", 0))
+            seller_grade = result.get("seller_grade", "N/A")
+
+            st.markdown(
+                get_status_block(result.get("predicted_label", "Unknown"), invalid_input),
+                unsafe_allow_html=True
+            )
+
+            row1 = st.columns(3)
+            row2 = st.columns(3)
+
+            metrics = [
+                ("Prediction", result.get("predicted_label", "N/A")),
+                ("Fake Probability", f"{fake_probability:.4f}"),
+                ("Authenticity Score", f"{authenticity_score:.2f}"),
+                ("Seller Trust Score", f"{seller_trust_score:.2f}"),
+                ("Seller Grade", seller_grade),
+                ("Risk Level", get_risk_level(fake_probability, invalid_input)),
+            ]
+
+            for col, (label, value) in zip(row1 + row2, metrics):
+                if label == "Seller Grade":
+                    value_html = f'<div class="metric-value" style="color:{grade_color(value)};">{value}</div>'
+                else:
+                    value_html = f'<div class="metric-value">{value}</div>'
+
+                with col:
+                    st.markdown(
+                        f"""
+                        <div class="metric-card">
+                            <div class="metric-label">{label}</div>
+                            {value_html}
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+
+            st.markdown(
+                f"""
+                <span class="small-badge">Product ID: {result.get("product_id", "")}</span>
+                <span class="small-badge">Reviewer ID: {result.get("reviewer_id", "")}</span>
+                <span class="small-badge">Seller ID: {result.get("seller_id", "")}</span>
+                """,
+                unsafe_allow_html=True
+            )
+
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    if "result" in st.session_state:
         result = st.session_state.result
         invalid_input = bool(result.get("invalid_input", False))
         fake_probability = float(result.get("fake_probability", 0))
         authenticity_score = float(result.get("authenticity_score", 0))
         seller_trust_score = float(result.get("seller_trust_score", 0))
-        seller_grade = result.get("seller_grade", "N/A")
 
-        st.markdown(
-            get_status_block(result.get("predicted_label", "Unknown"), invalid_input),
-            unsafe_allow_html=True
+        chart_col1, chart_col2, chart_col3 = st.columns(3, gap="large")
+
+        with chart_col1:
+            st.plotly_chart(
+                make_gauge(
+                    fake_probability * 100,
+                    "Fake Probability %",
+                    [
+                        {"range": [0, 30], "color": "rgba(34,197,94,0.25)"},
+                        {"range": [30, 60], "color": "rgba(245,158,11,0.25)"},
+                        {"range": [60, 100], "color": "rgba(239,68,68,0.25)"},
+                    ]
+                ),
+                use_container_width=True
+            )
+
+        with chart_col2:
+            st.plotly_chart(
+                make_gauge(
+                    authenticity_score,
+                    "Authenticity Score",
+                    [
+                        {"range": [0, 40], "color": "rgba(239,68,68,0.25)"},
+                        {"range": [40, 70], "color": "rgba(245,158,11,0.25)"},
+                        {"range": [70, 100], "color": "rgba(34,197,94,0.25)"},
+                    ]
+                ),
+                use_container_width=True
+            )
+
+        with chart_col3:
+            st.plotly_chart(
+                make_seller_bar(seller_trust_score),
+                use_container_width=True
+            )
+
+        st.plotly_chart(
+            make_radar(fake_probability, authenticity_score, seller_trust_score),
+            use_container_width=True
         )
 
-        row1 = st.columns(3)
-        row2 = st.columns(3)
+        bottom1, bottom2 = st.columns(2, gap="large")
 
-        metrics = [
-            ("Prediction", result.get("predicted_label", "N/A")),
-            ("Fake Probability", f"{fake_probability:.4f}"),
-            ("Authenticity Score", f"{authenticity_score:.2f}"),
-            ("Seller Trust Score", f"{seller_trust_score:.2f}"),
-            ("Seller Grade", seller_grade),
-            ("Risk Level", get_risk_level(fake_probability, invalid_input)),
-        ]
+        with bottom1:
+            st.subheader("Review Explanation")
+            st.markdown(
+                f'<div class="explanation-card">{result.get("review_explanation", "No explanation available.")}</div>',
+                unsafe_allow_html=True
+            )
 
-        for col, (label, value) in zip(row1 + row2, metrics):
-            if label == "Seller Grade":
-                value_html = f'<div class="metric-value" style="color:{grade_color(value)};">{value}</div>'
+        with bottom2:
+            st.subheader("Seller Trust Explanation")
+            st.markdown(
+                f'<div class="explanation-card">{result.get("trust_explanation", "No explanation available.")}</div>',
+                unsafe_allow_html=True
+            )
+
+        with st.expander("Raw API Response"):
+            st.json(result)
+
+with tab2:
+    st.markdown('<div class="section-card">', unsafe_allow_html=True)
+    st.subheader("Batch Review Analysis")
+    st.write("Upload a CSV file to analyze multiple reviews at once and identify risky sellers.")
+
+    uploaded_file = st.file_uploader("Upload CSV file", type=["csv"])
+
+    st.caption("Required columns: review_text, rating, verified_purchase, product_id, reviewer_id, seller_id")
+
+    if uploaded_file:
+        batch_df = pd.read_csv(uploaded_file)
+        st.write("Preview")
+        st.dataframe(batch_df.head(), use_container_width=True)
+
+        if st.button("Analyze Batch", use_container_width=True):
+            with st.spinner("Processing batch reviews..."):
+                result_df = process_batch_file(batch_df)
+
+            if result_df.empty:
+                st.error("No valid results were returned. Please check your file format and API connection.")
             else:
-                value_html = f'<div class="metric-value">{value}</div>'
-
-            with col:
-                st.markdown(
-                    f"""
-                    <div class="metric-card">
-                        <div class="metric-label">{label}</div>
-                        {value_html}
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
-
-        st.markdown(
-            f"""
-            <span class="small-badge">Product ID: {result.get("product_id", "")}</span>
-            <span class="small-badge">Reviewer ID: {result.get("reviewer_id", "")}</span>
-            <span class="small-badge">Seller ID: {result.get("seller_id", "")}</span>
-            """,
-            unsafe_allow_html=True
-        )
+                st.session_state.batch_result = result_df
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-if "result" in st.session_state:
-    result = st.session_state.result
-    invalid_input = bool(result.get("invalid_input", False))
-    fake_probability = float(result.get("fake_probability", 0))
-    authenticity_score = float(result.get("authenticity_score", 0))
-    seller_trust_score = float(result.get("seller_trust_score", 0))
+    if "batch_result" in st.session_state:
+        result_df = st.session_state.batch_result.copy()
 
-    chart_col1, chart_col2, chart_col3 = st.columns(3, gap="large")
+        total_reviews = len(result_df)
+        fake_count = (result_df["predicted_label"].astype(str).str.lower() == "fake").sum()
+        fake_percent = (fake_count / total_reviews) * 100 if total_reviews else 0
 
-    with chart_col1:
-        st.plotly_chart(
-            make_gauge(
-                fake_probability * 100,
-                "Fake Probability %",
-                [
-                    {"range": [0, 30], "color": "rgba(34,197,94,0.25)"},
-                    {"range": [30, 60], "color": "rgba(245,158,11,0.25)"},
-                    {"range": [60, 100], "color": "rgba(239,68,68,0.25)"},
-                ]
-            ),
+        risky_sellers = (
+            result_df.groupby("seller_id", as_index=False)
+            .agg(
+                avg_fake_probability=("fake_probability", "mean"),
+                avg_seller_trust_score=("seller_trust_score", "mean"),
+                review_count=("seller_id", "count")
+            )
+            .sort_values(by="avg_fake_probability", ascending=False)
+        )
+
+        m1, m2, m3 = st.columns(3)
+        with m1:
+            st.metric("Total Reviews", total_reviews)
+        with m2:
+            st.metric("Fake Reviews", int(fake_count))
+        with m3:
+            st.metric("Fake %", f"{fake_percent:.2f}%")
+
+        chart1, chart2 = st.columns(2, gap="large")
+
+        with chart1:
+            fig_hist = px.histogram(
+                result_df,
+                x="fake_probability",
+                nbins=20,
+                title="Fake Probability Distribution"
+            )
+            fig_hist.update_layout(
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
+                font=dict(color="#e5e7eb")
+            )
+            st.plotly_chart(fig_hist, use_container_width=True)
+
+        with chart2:
+            label_counts = result_df["predicted_label"].value_counts().reset_index()
+            label_counts.columns = ["label", "count"]
+            fig_pie = px.pie(
+                label_counts,
+                names="label",
+                values="count",
+                title="Prediction Breakdown"
+            )
+            fig_pie.update_layout(
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
+                font=dict(color="#e5e7eb")
+            )
+            st.plotly_chart(fig_pie, use_container_width=True)
+
+        st.subheader("Top Risky Sellers")
+        st.dataframe(risky_sellers.head(10), use_container_width=True)
+
+        st.subheader("Batch Results")
+        st.dataframe(result_df, use_container_width=True)
+
+        csv_data = result_df.to_csv(index=False).encode("utf-8")
+        st.download_button(
+            label="Download Batch Results CSV",
+            data=csv_data,
+            file_name="batch_analysis_results.csv",
+            mime="text/csv",
             use_container_width=True
         )
-
-    with chart_col2:
-        st.plotly_chart(
-            make_gauge(
-                authenticity_score,
-                "Authenticity Score",
-                [
-                    {"range": [0, 40], "color": "rgba(239,68,68,0.25)"},
-                    {"range": [40, 70], "color": "rgba(245,158,11,0.25)"},
-                    {"range": [70, 100], "color": "rgba(34,197,94,0.25)"},
-                ]
-            ),
-            use_container_width=True
-        )
-
-    with chart_col3:
-        st.plotly_chart(
-            make_seller_bar(seller_trust_score),
-            use_container_width=True
-        )
-
-    st.plotly_chart(
-        make_radar(fake_probability, authenticity_score, seller_trust_score),
-        use_container_width=True
-    )
-
-    bottom1, bottom2 = st.columns(2, gap="large")
-
-    with bottom1:
-        st.subheader("Review Explanation")
-        st.markdown(
-            f'<div class="explanation-card">{result.get("review_explanation", "No explanation available.")}</div>',
-            unsafe_allow_html=True
-        )
-
-    with bottom2:
-        st.subheader("Seller Trust Explanation")
-        st.markdown(
-            f'<div class="explanation-card">{result.get("trust_explanation", "No explanation available.")}</div>',
-            unsafe_allow_html=True
-        )
-
-    with st.expander("Raw API Response"):
-        st.json(result)
 
 st.markdown(
     """
     <div class="footer-note">
-        This dashboard uses a FastAPI backend with TF-IDF + Logistic Regression,
-        behavioral feature engineering, suspicious cluster detection, and seller trust scoring.
+        Powered by TF-IDF + Logistic Regression, behavioral intelligence, suspicious cluster detection, seller trust scoring, FastAPI, Streamlit, and Plotly.
     </div>
     """,
     unsafe_allow_html=True
