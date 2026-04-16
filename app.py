@@ -7,7 +7,7 @@ import plotly.express as px
 API_URL = "http://127.0.0.1:8000/predict"
 
 st.set_page_config(
-    page_title="Trust Intelligence",
+    page_title="AI Fake Review Detection",
     page_icon="🛡️",
     layout="wide"
 )
@@ -322,7 +322,7 @@ st.markdown(
         <div class="hero-row">
             <div class="hero-logo">🛡️</div>
             <div>
-                <div class="hero-title">Trust Intelligence</div>
+                <div class="hero-title">AI Fake Review Detection & Seller Trust Scoring</div>
                 <div class="hero-tagline">Trust Intelligence for E-Commerce</div>
                 <div class="hero-subtitle">
                     Detect fake reviews, identify suspicious activity, and evaluate seller credibility in real time.
