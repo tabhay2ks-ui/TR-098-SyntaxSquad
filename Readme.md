@@ -1,207 +1,190 @@
-# 🛡️ AI-Powered Fake Review Detection & Seller Trust Scoring
-
-## 📌 Overview
+🛡️ AI-Powered Fake Review Detection & Seller Trust Scoring (Phase 2)
+📌 Overview
 
 Fake reviews distort customer trust and influence purchasing decisions across e-commerce platforms. This project builds an end-to-end AI pipeline to detect fake reviews, identify coordinated review campaigns, and compute a trust score for sellers.
 
-Our system combines **machine learning, behavioral analysis, and clustering techniques** to provide both review-level and seller-level insights.
+In Phase 2, the system has been significantly enhanced to incorporate behavioral intelligence, clustering-based fraud detection, and explainability, making it closer to a real-world fraud detection system.
 
----
+🚀 Key Features
+🔍 Fake Review Detection
+Uses TF-IDF + Logistic Regression
+Combines text + behavioral features
+Outputs:
+Fake probability
+Authenticity score (0–100)
+Predicted label (Real/Fake)
+🧠 Behavioral Analysis (NEW in Phase 2)
 
-## 🚀 Key Features
+Enhanced feature engineering to capture real-world fraud patterns:
 
-### 🔍 Fake Review Detection
+Review length & word count
+Rating deviation from product average
+Reviewer activity patterns
+Daily review frequency (review bursts)
+Extreme rating detection (1★ or 5★)
+Verified purchase behavior
+🕸️ Coordinated Campaign Detection (Enhanced)
+Uses DBSCAN clustering
+Groups reviewers based on behavior patterns
+Detects potential review spam campaigns
+Outputs:
+cluster_id
+suspicious_cluster_flag
+⭐ Seller Trust Scoring (Improved)
 
-* Uses **TF-IDF + Logistic Regression**
-* Outputs:
+Aggregates review-level signals into seller-level insights:
 
-  * Fake probability
-  * Authenticity score (0–100)
+Incorporates:
+Authenticity scores
+Verified purchase ratio
+Fake probability trends
+Suspicious cluster participation
+Outputs:
+Trust score (0–100)
+Seller grade (A–F)
+Human-readable explanation
+💬 Explainable AI (NEW)
 
-### 🧠 Behavioral Analysis
+Every review now includes a human-readable explanation:
 
-* Detects unusual patterns such as:
-
-  * Review bursts
-  * Reviewer activity frequency
-  * Rating deviations
-
-### 🕸️ Coordinated Campaign Detection
-
-* Uses **DBSCAN clustering**
-* Identifies groups of reviewers acting together
-* Flags suspicious clusters
-
-### ⭐ Seller Trust Scoring
-
-* Aggregates review-level signals into seller-level insights
-* Outputs:
-
-  * Trust score (0–100)
-  * Grade (A–F)
-
----
-
-## 🏗️ Project Structure
-
-```
+Explains why a review is suspicious or authentic
+Uses feature-based reasoning such as:
+Short review length
+High reviewer activity
+Rating anomalies
+Cluster membership
+🏗️ Project Structure
 fake-review-detector/
 │
 ├── data/
-│   ├── raw/                  # Original dataset
-│   └── processed/            # Cleaned dataset
+│   ├── raw/
+│   └── processed/
 │
 ├── src/
-│   ├── data_preprocessing.py # Data cleaning & preparation
-│   ├── features.py           # Feature engineering
-│   ├── model.py              # ML model for fake detection
-│   ├── clustering.py         # Campaign detection
+│   ├── data_preprocessing.py
+│   ├── features.py           # Enhanced behavioral features
+│   ├── model.py              # Improved ML pipeline (scaled + balanced)
+│   ├── clustering.py         # DBSCAN-based campaign detection
 │   ├── scoring.py            # Seller trust scoring
-│   └── utils.py              # Helper functions
+│   ├── explanation.py        # Explainable AI (NEW)
+│   └── utils.py
 │
 ├── outputs/
-│   ├── predictions.csv       # Review-level predictions
-│   └── seller_scores.csv     # Seller-level trust scores
+│   ├── predictions.csv
+│   └── seller_scores.csv
 │
-├── main.py                   # Runs full pipeline
+├── main.py                   # Full pipeline execution
+├── predict_one.py            # Single review prediction (NEW)
 ├── requirements.txt
 └── README.md
-```
-
----
-
-## ⚙️ How It Works
-
-```
+⚙️ How It Works
 Raw Data
    ↓
 Data Preprocessing
    ↓
-Feature Engineering
+Feature Engineering (Text + Behavioral)
    ↓
-Fake Review Model
+Fake Review Model (ML)
    ↓
 Clustering (Campaign Detection)
    ↓
 Seller Trust Scoring
    ↓
+Explainability Layer
+   ↓
 Outputs
-```
-
----
-
-## 📊 Input Data
+📊 Input Data
 
 The dataset includes:
 
-* `review_text`
-* `rating`
-* `label` (fake or real)
-* `product_id`
-* `reviewer_id` (generated)
-* `seller_id` (derived)
-* `timestamp` (generated)
-* `verified_purchase` (simulated)
+review_text
+rating
+label (fake or real)
+product_id
+reviewer_id
+seller_id
+timestamp
+verified_purchase
 
-We used a Kaggle Amazon Fake Review dataset and standardized it into a structured format for our pipeline.
+Additional features are engineered during processing.
 
----
+📈 Outputs
+📄 predictions.csv
 
-## 📈 Outputs
+Review-level insights:
 
-### 📄 predictions.csv
+Fake probability
+Authenticity score
+Predicted label
+Cluster detection
+Behavioral features
+Explanation (NEW)
+📄 seller_scores.csv
 
-Contains review-level insights:
+Seller-level insights:
 
-* Fake probability
-* Authenticity score
-* Predicted label
-* Cluster detection
-* Behavioral features
-
-### 📄 seller_scores.csv
-
-Contains seller-level insights:
-
-* Seller trust score (0–100)
-* Seller grade (A–F)
-* Aggregated behavior metrics
-
----
-
-## 🧮 Trust Score Formula
+Seller trust score (0–100)
+Seller grade (A–F)
+Aggregated behavior metrics
+Trust explanation (NEW)
+🧮 Trust Score Formula
 
 The seller trust score is computed using:
 
-* 50% → Review authenticity
-* 25% → Verified purchase ratio
-* 15% → Suspicious activity penalty
-* 10% → Fake probability adjustment
-
----
-
-## 🛠️ Technologies Used
-
-* Python
-* Pandas & NumPy
-* Scikit-learn
-* DBSCAN (Clustering)
-* TF-IDF (Text Vectorization)
-
----
-
-## ▶️ How to Run
-
-1. Install dependencies:
-
-```
+40% → Review authenticity
+25% → Verified purchase ratio
+20% → Cluster trust (penalty for suspicious groups)
+15% → Fake probability adjustment
+🛠️ Technologies Used
+Python
+Pandas & NumPy
+Scikit-learn
+DBSCAN (Clustering)
+TF-IDF (Text Vectorization)
+TextBlob (Sentiment Analysis)
+▶️ How to Run
+Install dependencies:
 pip install -r requirements.txt
-```
-
-2. Run the pipeline:
-
-```
+Run full pipeline:
 python main.py
-```
-
-3. Outputs will be saved in:
-
-```
+Run single review prediction:
+python predict_one.py
+Outputs will be saved in:
 outputs/
-```
+🎯 Phase 2 Improvements Summary
 
----
+Compared to Phase 1, this version introduces:
 
-## 🎯 Future Improvements
+Behavioral feature engineering
+Scaled and balanced ML model
+Coordinated campaign detection via clustering
+Seller trust scoring improvements
+Explainable AI for both reviews and sellers
+Interactive single-review prediction
+🔮 Future Improvements
+Deep learning models (BERT / Transformers)
+Graph-based fraud detection
+Real-time API (FastAPI)
+Dashboard (Streamlit / Tableau)
+Advanced explainability (SHAP / LIME)
+💡 Key Insight
 
-* Add deep learning models (BERT)
-* Improve sentiment analysis
-* Real-time API deployment (FastAPI)
-* Interactive dashboard (Streamlit)
-* Explainable AI (why a review is fake)
+This project moves beyond simple classification by integrating:
 
----
+Text analysis
+Behavioral intelligence
+Network-based clustering
+Explainability
 
-## 💡 Key Insight
+to deliver a comprehensive trust evaluation system.
 
-This project goes beyond simple classification by combining:
+🏁 Conclusion
 
-* Text analysis
-* Behavioral signals
-* Network-based clustering
+In Phase 2, we transformed a basic fake review classifier into a multi-layer fraud detection system that:
 
-to deliver a **complete trust evaluation system**.
+Detects fake reviews more reliably
+Identifies coordinated fraudulent behavior
+Provides transparent explanations
+Quantifies seller credibility
 
----
-
-## 🏁 Conclusion
-
-We developed a scalable and modular system that:
-
-* Detects fake reviews
-* Identifies coordinated fraud
-* Quantifies seller credibility
-
-This approach can be applied to platforms like Amazon, Yelp, and Flipkart to improve trust and transparency in online marketplaces.
-
----
+This system is scalable and can be adapted for real-world platforms like Amazon, Yelp, and Flipkart.
